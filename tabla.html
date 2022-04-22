@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>fecha</th>
+        <th>from_cantidad</th>
+        <th>from_moneda</th>
+        <th>hora</th>
+        <th>id</th>
+        <th>to_cantidad</th>
+        <th>to_moneda</th>
+      </tr>
+    </table>
+
+    <script>
+      function exchange_crypto() {
+        var date = new Date();
+        const hora = date.getHours() + ":" + date.getMinutes();
+        const fecha = date.getFullYear();
+
+        fetch(
+          `https://rest.coinapi.io/v1/exchangerate/${money_from}/${money_to}?apikey=E01CCF95-56F6-42CD-9ABA-67E8380016F1`
+        )
+          .then((response) => response.json())
+          .then((result) => {
+            const table = document.querySelector("table");
+            result.rate.forEach((item) => {
+              let tr = `<tr>
+            <td> ${fecha}</td>
+            <td> ${hora}</td>
+            <td> ${money_from}</td>
+            <td> ${amount.value}</td>
+            <td> ${money_to}</td>
+            <td> ${item.rate * amount.value}</td>
+                </tr>
+                `;
+              table.innerHTML += tr;
+            });
+          });
+      }
+
+
+      function exchange_crypto() {
+    var date = new Date();
+    const hora = date.getHours() + ":" + date.getMinutes();
+    const fecha = date.getFullYear();
+
+    fetch(
+      `https://rest.coinapi.io/v1/exchangerate/${money_from}/${money_to}?apikey=E01CCF95-56F6-42CD-9ABA-67E8380016F1`
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        const table = document.querySelector("table");
+        result.rates.forEach((item) => {
+          let tr = `<tr>
+            <td> ${fecha}</td>
+            <td> ${hora}</td>
+            <td> ${money_from}</td>
+            <td> ${amount.value}</td>
+            <td> ${money_to}</td>
+            <td> ${item.rate * amount.value}</td>
+                </tr>
+                `;
+          table.innerHTML += tr;
+        });
+      });
+  }
+
+
+
+
+
+  
+  
+    </script>
+  </body>
+</html>

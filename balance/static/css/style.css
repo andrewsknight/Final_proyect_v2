@@ -1,0 +1,13 @@
+
+
+.fa{
+    color:#ef6c00;
+}
+
+.container{
+min-height: calc(100vh - 122px);
+}
+
+.error_input {
+    border: 1px solid red !important;
+  }
