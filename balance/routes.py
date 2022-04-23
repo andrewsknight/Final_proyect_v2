@@ -4,6 +4,7 @@ from balance import money_controller
 import sqlite3
 from flask import jsonify, render_template, request, flash
 from balance import api_routes
+import balance
 
 
 def invest_eur():
@@ -27,19 +28,39 @@ def all_money(currency):
     return total_money
 
 
+@app.route("/api/v1/cryptos/<crypto>", methods = ["GET"])
+def get_crypto(crypto):
+    try:
+        amount_crypto = all_money(crypto)
+        crypto = crypto.upper()
+        crypto_money_value = api_routes.conversor(amount_crypto, crypto, "EUR")
+
+        return jsonify({
+            "status": "success",
+            "amount": amount_crypto,
+            "crypto_money_value": crypto_money_value
+        })
+    except sqlite3.Error as e:
+        return jsonify({
+            "status": "failure",
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
+        }), 400
+
+
+
 @app.route("/api/v1/movimientos", methods=["GET"])
 def get_movements():
     try:
         movements = money_controller.get_movements()
         return jsonify({
             "status": "success",
-            "data":movements
-          
+            "data": movements
+
         })
     except sqlite3.Error as e:
         return jsonify({
             "status": "failure",
-            "message": "Error en la base dedatos, inténtelo de nuevo más tarde"
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
 
 
@@ -47,11 +68,12 @@ def get_movements():
 def get_movement_by_id(id):
     try:
         movement = money_controller.get_by_id(id)
+
         return jsonify(movement)
     except sqlite3.Error as e:
         return jsonify({
             "status": "failure",
-            "message": "Error en la base dedatos, inténtelo de nuevo más tarde"
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
 
 
@@ -143,7 +165,7 @@ def insert_movement():
     except sqlite3.Error as e:
         return jsonify({
             "status": "failure",
-            "message": "Error en la base dedatos, inténtelo de nuevo más tarde"
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
 
 
@@ -159,18 +181,18 @@ def get_status():
             tot_money += tot_in_eur
 
         return jsonify({
-           "status":"success",
-           "data": {
-              "invest": invest,
-            "diferent_to_money": diferent_to_money,
-            "tot_money": tot_money
-           }
+            "status": "success",
+            "data": {
+                "invest": invest,
+                "diferent_to_money": diferent_to_money,
+                "tot_money": tot_money
+            }
         })
     except sqlite3.Error as e:
-      return jsonify({
-          "status": "fail",
-          "mensaje": "Mensaje de error"
-      })
+        return jsonify({
+            "status": "fail",
+            "mensaje": "Error en la api"
+        })
 
 
 @ app.route("/api/v1/movimiento/<id>", methods=["PUT"])
@@ -189,7 +211,7 @@ def update_movement():
     except sqlite3.Error as e:
         return jsonify({
             "status": "failure",
-            "message": "Error en la base dedatos, inténtelo de nuevo más tarde"
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
 
 

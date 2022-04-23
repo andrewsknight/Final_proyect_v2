@@ -51,6 +51,7 @@ content %} <br /><br />
     <ul id="tabs" class="tabs">
       <li class="tab col s3"><a href="#test1">Resultados</a></li>
       <li class="tab col s3"><a href="#test2">Inversion</a></li>
+      <li class="tab col s3"><a href="#test3">Cryptos</a></li>
     </ul>
   </div>
   <div id="test1" class="col s12">
@@ -74,7 +75,34 @@ content %} <br /><br />
     <div>
       <p>Invertido: <span id="invest"></span></p>
       <p>valor actual: <span id="actual_value"></span></p>
-      <p>Diferencia:<span id="diferencia"></span></p>
+      <p>
+        Diferencia:<span id="diferencia"></span>
+        €
+      </p>
+    </div>
+  </div>
+  <div id="test3" class="col s12">
+    <div id="cryptoMoney" class="input-field col s3">
+      <input id="crypto_money" class="autocomplete" type="text" onchange = "get_movements_cryptos()"/>
+      <label for="crypto_money">Select your crypto</label>
+    </div>
+    <div id="crypto_amount_div" class="input-field col s3">
+      <input
+        type="number"
+        disabled
+        id="crypto_amount"
+        
+      />
+      <label for="crypto_amount">amount </label>
+    </div>
+    <div id="cryptoValue" class="input-field col s6">
+      <input
+        type="number"
+        disabled
+        id="crypto_money_value"
+        
+      />
+      <label for="crypto_money_value">crypto value €</label>
     </div>
   </div>
 </div>
@@ -92,12 +120,29 @@ content %} <br /><br />
   const result_label = document.getElementById("result_label");
   const send = document.getElementById("send");
   const tbody = document.getElementById("tbody");
-  const invest = document.getElementById("invest")
-  const actual_value = document.getElementById("actual_value")
-  const diferencia = document.getElementById("diferencia")
-  const apikey = apykey3;
+  const invest = document.getElementById("invest");
+  const actual_value = document.getElementById("actual_value");
+  const diferencia = document.getElementById("diferencia");
+  const apikey = apykey2;
+  const crypto_money = document.getElementById("crypto_money");
+  const crypto_money_value = document.getElementById("crypto_money_value");
+  const crypto_amount = document.getElementById("crypto_amount");
   let valid_coins = [];
   let last_date = new Date();
+
+  function get_movements_cryptos() {
+    fetch(`/api/v1/cryptos/${crypto_money.value}`)
+      .then((resultServer) => {
+        return resultServer.json();
+      })
+      .then((result) => {
+        if (result.status === "success") {
+          
+          crypto_amount.value = result.amount;
+          crypto_money_value.value = result.crypto_money_value;
+        }
+      });
+  }
 
   function get_movements_invest() {
     fetch("/api/v1/status")
@@ -105,12 +150,16 @@ content %} <br /><br />
         return resultServer.json();
       })
       .then((result) => {
-        debugger
+        debugger;
         if (result.status === "success") {
-       invest.innerHTML = result.data.invest
-       actual_value.innerHTML = result.data.tot_money
-       diferencia.innerHTML = result.data.tot_money - result.data.invest
-
+          invest.innerHTML = result.data.invest;
+          actual_value.innerHTML = result.data.tot_money;
+          diferencia.innerHTML = result.data.tot_money - result.data.invest;
+          if (diferencia.innerHTML < 0) {
+            diferencia.classList.add("invalid");
+          } else {
+            diferencia.innerHTML.classList.remove("invalid");
+          }
         }
       });
   }
@@ -177,7 +226,7 @@ content %} <br /><br />
       .then((result) => {
         if (result.status === "success") {
           get_movements();
-          get_movements_invest(); 
+          get_movements_invest();
           money_from_input.value = "";
           amount_input.value = "";
           money_to_input.value = "";
@@ -185,7 +234,6 @@ content %} <br /><br />
 
           alert("operación realizada con éxito");
         } else {
-          debugger;
           alert(result.mensaje);
         }
       });
@@ -208,6 +256,9 @@ content %} <br /><br />
           data: cryptos,
         });
         $("#money_to").autocomplete({
+          data: cryptos,
+        });
+        $("#crypto_money").autocomplete({
           data: cryptos,
         });
       });
@@ -323,7 +374,8 @@ content %} <br /><br />
   $(document).ready(function () {
     fill_select();
     get_movements();
-    get_movements_invest(); 
+    get_movements_invest();
+    get_movements_cryptos();
   }); // end of jQuery name space
 </script>
 
