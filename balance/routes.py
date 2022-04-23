@@ -28,17 +28,22 @@ def all_money(currency):
     return total_money
 
 
-@app.route("/api/v1/cryptos/<crypto>", methods = ["GET"])
-def get_crypto(crypto):
+@app.route("/api/v1/cryptos/diferent", methods=["GET"])
+def get_diferent_cryptos():
+
     try:
-        amount_crypto = all_money(crypto)
-        crypto = crypto.upper()
-        crypto_money_value = api_routes.conversor(amount_crypto, crypto, "EUR")
+        moneys = money_controller.get_diferent_to_money()
+        result = []
+        for money in moneys:
+            result.append({
+                money: ""
+
+            })
 
         return jsonify({
             "status": "success",
-            "amount": amount_crypto,
-            "crypto_money_value": crypto_money_value
+            "data": result
+
         })
     except sqlite3.Error as e:
         return jsonify({
@@ -46,6 +51,39 @@ def get_crypto(crypto):
             "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
 
+
+@app.route("/api/v1/crypto/<crypto>", methods=["GET"])
+def get_crypto(crypto):
+
+    try:
+        movements = money_controller.get_movements()
+        crypto = crypto.upper()
+        for movement in movements:
+            if crypto not in movement.values():
+                return jsonify({
+                    "status:": "failure",
+                    "message": "introduce una crypto que tengas en la wallet"
+                })
+            else:
+
+                amount_crypto = all_money(crypto)
+                crypto_money_value = api_routes.conversor(
+                    amount_crypto, crypto, "EUR")
+                if crypto_money_value == -1:
+                    return jsonify({
+                        "status": "failure",
+                        "message": "Error en la base de datos, inténtelo de nuevo más tarde"
+                    }), 400
+                return jsonify({
+                    "status": "success",
+                    "amount": amount_crypto,
+                    "crypto_money_value": crypto_money_value
+                })
+    except sqlite3.Error as e:
+        return jsonify({
+            "status": "failure",
+            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
+        }), 400
 
 
 @app.route("/api/v1/movimientos", methods=["GET"])
@@ -178,6 +216,11 @@ def get_status():
         for money in diferent_to_money:
             tot_of_this_money = all_money(money)
             tot_in_eur = api_routes.conversor(tot_of_this_money, money, 'EUR')
+            if tot_in_eur == -1:
+                return jsonify({
+                    "status": "failure",
+                    "message": "Error en la base de datos, inténtelo de nuevo más tarde"
+                }), 400
             tot_money += tot_in_eur
 
         return jsonify({

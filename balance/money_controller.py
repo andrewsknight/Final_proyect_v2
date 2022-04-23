@@ -61,12 +61,10 @@ def get_diferent_to_money():
     cursor = db.cursor()
     query = "SELECT DISTINCT to_moneda FROM movimientos"
     cursor.execute(query)
-    all_movements = cursor.fetchall() 
+    all_movements = cursor.fetchall()
     all_movements_array = []
 
     for movement in all_movements:
-        to_moneda= movement[0]
+        to_moneda = movement[0]
         all_movements_array.append(to_moneda)
     return all_movements_array
-
-    

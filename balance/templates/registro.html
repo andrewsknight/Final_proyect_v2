@@ -71,38 +71,45 @@ content %} <br /><br />
       <tbody id="tbody"></tbody>
     </table>
   </div>
+
   <div id="test2" class="col s12">
-    <div>
-      <p>Invertido: <span id="invest"></span></p>
-      <p>valor actual: <span id="actual_value"></span></p>
-      <p>
-        Diferencia:<span id="diferencia"></span>
-        €
-      </p>
+    <div id="cryptoValue" class="input-field col s3">
+      <label for="invest" class="active">invertido: </label>
+      <input id="invest" disabled />
     </div>
+
+    <div id="cryptoValue" class="input-field col s3">
+      <label for="actual_value" class="active">valor actual: </label>
+      <input id="actual_value" disabled />
+    </div>
+    <div id="cryptoValue" class="input-field col s3">
+      <label for="diferencia" class="active">Diferencia: </label>
+      <input id="diferencia" disabled />
+    </div>
+    
+    
   </div>
-  <div id="test3" class="col s12">
+
+  <div id="test3" class="input-field s12">
     <div id="cryptoMoney" class="input-field col s3">
-      <input id="crypto_money" class="autocomplete" type="text" onchange = "get_movements_cryptos()"/>
+      <input
+        id="crypto_money"
+        class="autocomplete"
+        type="text"
+        onchange="get_movements_cryptos()"
+      />
       <label for="crypto_money">Select your crypto</label>
     </div>
     <div id="crypto_amount_div" class="input-field col s3">
-      <input
-        type="number"
-        disabled
-        id="crypto_amount"
-        
-      />
-      <label for="crypto_amount">amount </label>
+      <label for="crypto_amount" id="crypto_amount_label">amount </label>
+      <input type="number" id="crypto_amount" disabled />
     </div>
+
     <div id="cryptoValue" class="input-field col s6">
-      <input
-        type="number"
-        disabled
-        id="crypto_money_value"
-        
-      />
-      <label for="crypto_money_value">crypto value €</label>
+      <label for="crypto_money_value" id="crypto_money_value_label"
+        >crypto value €</label
+      >
+      <input type="number" id="crypto_money_value" disabled />
     </div>
   </div>
 </div>
@@ -123,23 +130,30 @@ content %} <br /><br />
   const invest = document.getElementById("invest");
   const actual_value = document.getElementById("actual_value");
   const diferencia = document.getElementById("diferencia");
-  const apikey = apykey2;
+  const apikey = apykey3;
   const crypto_money = document.getElementById("crypto_money");
   const crypto_money_value = document.getElementById("crypto_money_value");
   const crypto_amount = document.getElementById("crypto_amount");
+  const crypto_amount_label = document.getElementById("crypto_amount_label");
+  const crypto_money_value_label = document.getElementById(
+    "crypto_money_value_label"
+  );
   let valid_coins = [];
   let last_date = new Date();
 
   function get_movements_cryptos() {
-    fetch(`/api/v1/cryptos/${crypto_money.value}`)
+    fetch(`/api/v1/crypto/${crypto_money.value}`)
       .then((resultServer) => {
         return resultServer.json();
       })
       .then((result) => {
         if (result.status === "success") {
-          
+          crypto_money_value_label.classList.add("active");
+          crypto_amount_label.classList.add("active");
           crypto_amount.value = result.amount;
           crypto_money_value.value = result.crypto_money_value;
+        } else {
+          alert(result.message);
         }
       });
   }
@@ -152,13 +166,13 @@ content %} <br /><br />
       .then((result) => {
         debugger;
         if (result.status === "success") {
-          invest.innerHTML = result.data.invest;
-          actual_value.innerHTML = result.data.tot_money;
-          diferencia.innerHTML = result.data.tot_money - result.data.invest;
-          if (diferencia.innerHTML < 0) {
+          invest.value = result.data.invest + " €";
+          actual_value.value = result.data.tot_money;
+          diferencia.value = result.data.tot_money - result.data.invest;
+          if ((diferencia.value) < 0) {
             diferencia.classList.add("invalid");
           } else {
-            diferencia.innerHTML.classList.remove("invalid");
+            diferencia.classList.remove("invalid");
           }
         }
       });
@@ -238,6 +252,15 @@ content %} <br /><br />
         }
       });
   }
+  function fill_select_own_money() {
+    fetch(`/api/v1/cryptos/diferent`)
+      .then((response) => response.json())
+      .then((result) => {
+        $("#crypto_money").autocomplete({
+          data: result.data,
+        });
+      });
+  }
 
   function fill_select() {
     fetch(`https://rest.coinapi.io/v1/exchangerate/EUR?apikey=${apikey}`)
@@ -256,9 +279,6 @@ content %} <br /><br />
           data: cryptos,
         });
         $("#money_to").autocomplete({
-          data: cryptos,
-        });
-        $("#crypto_money").autocomplete({
           data: cryptos,
         });
       });
@@ -373,6 +393,7 @@ content %} <br /><br />
 
   $(document).ready(function () {
     fill_select();
+    fill_select_own_money();
     get_movements();
     get_movements_invest();
     get_movements_cryptos();
