@@ -256,8 +256,9 @@ content %} <br /><br />
     fetch(`/api/v1/cryptos/diferent`)
       .then((response) => response.json())
       .then((result) => {
+
         $("#crypto_money").autocomplete({
-          data: result.data,
+          data: result.data
         });
       });
   }

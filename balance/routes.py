@@ -33,12 +33,9 @@ def get_diferent_cryptos():
 
     try:
         moneys = money_controller.get_diferent_to_money()
-        result = []
+        result = {}
         for money in moneys:
-            result.append({
-                money: ""
-
-            })
+            result[money] = ""
 
         return jsonify({
             "status": "success",
