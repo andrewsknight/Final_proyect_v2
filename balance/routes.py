@@ -3,29 +3,8 @@ from balance import app
 from balance import money_controller
 import sqlite3
 from flask import jsonify, render_template, request, flash
-from balance import api_routes
+from balance import conversor_utils
 import balance
-
-
-def invest_eur():
-    total_money = 0
-    movements = money_controller.get_movements()
-    for movement in movements:
-        if movement["from_moneda"] == 'EUR':
-            total_money += movement["from_cantidad"]
-    return total_money
-
-
-def all_money(currency):
-    total_money = 0
-    movements = money_controller.get_movements()
-    for movement in movements:
-        if movement["to_moneda"] == currency:
-            total_money += movement["to_cantidad"]
-        if movement["from_moneda"] == currency:
-            total_money -= movement["from_cantidad"]
-
-    return total_money
 
 
 @app.route("/api/v1/cryptos/diferent", methods=["GET"])
@@ -53,29 +32,30 @@ def get_diferent_cryptos():
 def get_crypto(crypto):
 
     try:
-        movements = money_controller.get_movements()
+        moneys = money_controller.get_diferent_to_money()
         crypto = crypto.upper()
-        for movement in movements:
-            if crypto not in movement.values():
-                return jsonify({
-                    "status:": "failure",
-                    "message": "introduce una crypto que tengas en la wallet"
-                })
-            else:
+        if crypto not in moneys:
+            return jsonify({
+                "status:": "failure",
+                "message": "introduce una crypto que tengas en la wallet"
+            }), 400
+        else:
 
-                amount_crypto = all_money(crypto)
-                crypto_money_value = api_routes.conversor(
-                    amount_crypto, crypto, "EUR")
-                if crypto_money_value == -1:
-                    return jsonify({
-                        "status": "failure",
-                        "message": "Error en la base de datos, inténtelo de nuevo más tarde"
-                    }), 400
+            amount_crypto = conversor_utils.all_money(crypto)
+            crypto_money_value = conversor_utils.conversor(
+                amount_crypto, crypto, "EUR")
+
+            if crypto_money_value == -1:
                 return jsonify({
-                    "status": "success",
-                    "amount": amount_crypto,
-                    "crypto_money_value": crypto_money_value
-                })
+                    "status": "failure",
+                    "message": "Error en la base de datos, inténtelo de nuevo más tarde",
+                    "message2": "Demasiadas peticiones al api, inténtelo de nuevo más tarde"
+                }), 400
+            return jsonify({
+                "status": "success",
+                "amount": amount_crypto,
+                "crypto_money_value": crypto_money_value
+            })
     except sqlite3.Error as e:
         return jsonify({
             "status": "failure",
@@ -110,19 +90,6 @@ def get_movement_by_id(id):
             "status": "failure",
             "message": "Error en la base de datos, inténtelo de nuevo más tarde"
         }), 400
-
-
-@app.route("/api/v1/movimiento/<id>", methods=["DELETE"])
-def delete_movement(id):
-    try:
-        movement = money_controller.get_by_id(id)
-        return jsonify(movement)
-    except sqlite3.Error as e:
-        return jsonify({
-            "status": "failure",
-            "message": "Error en la base dedatos, inténtelo de nuevo más tarde"
-        }), 400
-
 
 @app.route("/api/v1/movimiento", methods=["POST"])
 def insert_movement():
@@ -170,7 +137,7 @@ def insert_movement():
                     "status": "failure",
                     "message": "Debe ingresar una cantidad"})
 
-            if from_moneda == "EUR" or all_money(from_moneda) >= from_cantidad:
+            if from_moneda == "EUR" or conversor_utils.all_money(from_moneda) >= from_cantidad:
 
                 last_id = money_controller.insert_movement(
                     fecha, hora, from_moneda, from_cantidad, to_moneda, to_cantidad)
@@ -207,17 +174,22 @@ def insert_movement():
 @ app.route("/api/v1/status", methods=["GET"])
 def get_status():
     try:
-        invest = invest_eur()
+        invest = conversor_utils.invest_eur()
         diferent_to_money = money_controller.get_diferent_to_money()
         tot_money = 0
         for money in diferent_to_money:
-            tot_of_this_money = all_money(money)
-            tot_in_eur = api_routes.conversor(tot_of_this_money, money, 'EUR')
+            tot_of_this_money = conversor_utils.all_money(money)
+
+            tot_in_eur = conversor_utils.conversor(
+                tot_of_this_money, money, 'EUR')
+
             if tot_in_eur == -1:
                 return jsonify({
                     "status": "failure",
-                    "message": "Error en la base de datos, inténtelo de nuevo más tarde"
+                    "message": "Error en la base de datos, inténtelo de nuevo más tarde",
+                    "message2": "Demasiadas peticiones al api, inténtelo de nuevo más tarde"
                 }), 400
+
             tot_money += tot_in_eur
 
         return jsonify({
@@ -233,27 +205,6 @@ def get_status():
             "status": "fail",
             "mensaje": "Error en la api"
         })
-
-
-@ app.route("/api/v1/movimiento/<id>", methods=["PUT"])
-def update_movement():
-    try:
-        movement = request.get_json()
-        fecha = movement["fecha"],
-        hora = movement["hora"],
-        from_moneda = movement["from_moneda"],
-        from_cantidad = movement["from_cantidad"],
-        to_moneda = movement["to_moneda"],
-        to_cantidad = movement["to_cantidad"]
-        result = money_controller.update_movement(
-            fecha, hora, from_moneda, from_cantidad, to_moneda, to_cantidad)
-        return jsonify(result)
-    except sqlite3.Error as e:
-        return jsonify({
-            "status": "failure",
-            "message": "Error en la base de datos, inténtelo de nuevo más tarde"
-        }), 400
-
 
 @ app.route("/registro")
 def movi_pag():

@@ -8,7 +8,7 @@ def get_db():
 
 
 def create_tables():
-    table =  """CREATE TABLE IF NOT EXISTS movimientos(
+    table = """CREATE TABLE IF NOT EXISTS movimientos(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fecha TEXT NOT NULL,
                 hora TEXT NOT NULL,
@@ -18,7 +18,7 @@ def create_tables():
                 to_cantidad DOUBLE NOT NULL
             )
             """
-    
+
     db = get_db()
     cursor = db.cursor()
 
